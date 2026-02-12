@@ -19,6 +19,7 @@ function AlertCard({ alert }: AlertCardProps) {
   };
 
   const isUnread = !alert.user_state?.is_read;
+  const severityColor = priorityColors[alert.severity as keyof typeof priorityColors] || priorityColors.medium;
 
   return (
     <div className={cn(
@@ -40,7 +41,7 @@ function AlertCard({ alert }: AlertCardProps) {
             <span
               className={cn(
                 'text-xs font-medium px-2 py-0.5 rounded-md flex-shrink-0 capitalize',
-                priorityColors[alert.severity]
+                severityColor
               )}
             >
               {alert.severity}
