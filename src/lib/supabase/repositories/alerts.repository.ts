@@ -31,7 +31,7 @@ export interface GeneratedAlertInsert {
   id: string; // Hash-based ID for idempotency
   rule_id?: string | null;
   property_id?: string | null;
-  severity: AlertSeverity;
+  severity: string; // AlertSeverity stored as string in DB
   title: string;
   description: string;
   estimated_value?: number | null;
