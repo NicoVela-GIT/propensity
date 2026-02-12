@@ -43,11 +43,6 @@ export default function PropertiesPage() {
     });
   }, [searchQuery, selectedType, properties]);
 
-  const handleEdit = (id: string) => {
-    // TODO: Implement edit functionality
-    console.log('Edit property:', id);
-  };
-
   const handleDelete = (id: string) => {
     // TODO: Implement delete functionality
     console.log('Delete property:', id);
@@ -128,7 +123,6 @@ export default function PropertiesPage() {
             >
               <PropertyGridCard
                 property={property}
-                onEdit={handleEdit}
                 onDelete={handleDelete}
               />
             </div>
