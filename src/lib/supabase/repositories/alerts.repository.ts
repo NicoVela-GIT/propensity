@@ -65,7 +65,7 @@ export interface AlertWithState extends GeneratedAlert {
 export async function upsertAlertRule(rule: AlertRuleInsert & { id?: string }): Promise<AlertRule> {
   const { data, error } = await supabase
     .from('alert_rules')
-    .upsert(rule as any)
+    .upsert(rule)
     .select()
     .single();
 
@@ -160,7 +160,7 @@ export async function upsertGeneratedAlerts(alerts: GeneratedAlertInsert[]): Pro
 
   const { data, error } = await supabase
     .from('generated_alerts')
-    .upsert(alerts as any, {
+    .upsert(alerts, {
       onConflict: 'id',
     })
     .select();
@@ -287,7 +287,7 @@ export async function markAlertAsRead(alertId: string): Promise<UserAlertState> 
     .upsert({
       alert_id: alertId,
       is_read: true,
-    } as any)
+    })
     .select()
     .single();
 
@@ -308,7 +308,7 @@ export async function dismissAlert(alertId: string): Promise<UserAlertState> {
       alert_id: alertId,
       is_dismissed: true,
       dismissed_at: new Date().toISOString(),
-    } as any)
+    })
     .select()
     .single();
 
