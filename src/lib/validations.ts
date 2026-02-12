@@ -33,30 +33,26 @@ export const addPropertySchema = z.object({
   city: z.string().min(1, 'City is required'),
   state: z.string().min(1, 'State is required'),
   zipCode: z.string().optional(),
-  propertyType: z.enum(propertyTypes, {
-    errorMap: () => ({ message: 'Please select a property type' }),
-  }),
+  propertyType: z.enum(propertyTypes),
 
   // Financial Details
-  purchasePrice: z.coerce.number().min(1, 'Purchase price is required'),
-  purchaseDate: z.date({
-    required_error: 'Purchase date is required',
-  }),
-  downPayment: z.coerce.number().min(0).optional(),
-  currentEstimatedValue: z.coerce.number().min(0).optional(),
-  currentMortgageBalance: z.coerce.number().min(0).optional(),
-  monthlyMortgagePayment: z.coerce.number().min(0).optional(),
-  interestRate: z.coerce.number().min(0).max(100).optional(),
+  purchasePrice: z.number().min(1, 'Purchase price is required'),
+  purchaseDate: z.date(),
+  downPayment: z.number().min(0).optional(),
+  currentEstimatedValue: z.number().min(0).optional(),
+  currentMortgageBalance: z.number().min(0).optional(),
+  monthlyMortgagePayment: z.number().min(0).optional(),
+  interestRate: z.number().min(0).max(100).optional(),
 
   // Rental Information
-  monthlyRent: z.coerce.number().min(0).optional(),
-  monthlyExpenses: z.coerce.number().min(0).optional(),
+  monthlyRent: z.number().min(0).optional(),
+  monthlyExpenses: z.number().min(0).optional(),
 
   // Property Details
-  bedrooms: z.coerce.number().min(0).optional(),
-  bathrooms: z.coerce.number().min(0).optional(),
-  squareFeet: z.coerce.number().min(0).optional(),
-  yearBuilt: z.coerce.number().min(1800).max(new Date().getFullYear()).optional(),
+  bedrooms: z.number().min(0).optional(),
+  bathrooms: z.number().min(0).optional(),
+  squareFeet: z.number().min(0).optional(),
+  yearBuilt: z.number().min(1800).max(new Date().getFullYear()).optional(),
   notes: z.string().optional(),
 });
 
