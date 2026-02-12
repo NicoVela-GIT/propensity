@@ -14,7 +14,7 @@ export type AlertSeverity = 'low' | 'medium' | 'high' | 'critical';
 
 export interface AlertRuleInsert {
   rule_type: string;
-  enabled?: boolean;
+  enabled?: boolean | null;
   parameters: Record<string, any>;
 }
 
