@@ -5,17 +5,19 @@
  */
 
 import { supabase } from '../client';
+import type { Database } from './database.types';
 
 // ============================================
 // Types
 // ============================================
 
 export type AlertSeverity = 'low' | 'medium' | 'high' | 'critical';
+export type Json = Database['public']['Tables']['alert_rules']['Row']['parameters'];
 
 export interface AlertRuleInsert {
   rule_type: string;
   enabled?: boolean | null;
-  parameters: Record<string, any>;
+  parameters: Json;
 }
 
 export interface AlertRule extends AlertRuleInsert {
