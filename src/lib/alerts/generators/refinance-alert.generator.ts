@@ -123,7 +123,7 @@ export async function generateRefinanceAlert(
       description: `Current mortgage rates are ${opportunity.potentialSavings.toFixed(2)}% lower than your loan rate. You could save approximately $${Math.round(estimatedMonthlySavings)}/month by refinancing.`,
       estimated_value: Math.round(estimatedAnnualSavings),
       triggered_at: new Date().toISOString(),
-      metadata,
+      metadata: metadata as any,
     };
   } catch (error) {
     console.error(`Error generating refinance alert for property ${property.property.id}:`, error);
