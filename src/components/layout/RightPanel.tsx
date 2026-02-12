@@ -1,45 +1,59 @@
 'use client';
 
 import Link from 'next/link';
-import { Eye, TrendingUp, Bell, BarChart3 } from 'lucide-react';
+import { Eye, TrendingUp, Bell, BarChart3, DollarSign } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { Alert, PropertyDistribution } from '@/lib/types';
+import { PropertyDistribution } from '@/lib/types';
+import type { AlertWithState } from '@/lib/supabase/repositories/alerts.repository';
 
 interface AlertCardProps {
-  alert: Alert;
+  alert: AlertWithState;
 }
 
 function AlertCard({ alert }: AlertCardProps) {
   const priorityColors = {
-    high: 'bg-red-100 text-red-700',
+    critical: 'bg-red-100 text-red-700',
+    high: 'bg-orange-100 text-orange-700',
     medium: 'bg-yellow-100 text-yellow-700',
     low: 'bg-blue-100 text-blue-700',
   };
 
+  const isUnread = !alert.user_state?.is_read;
+
   return (
-    <div className="bg-white rounded-xl p-4 border border-gray-100 hover:border-gray-200 hover:shadow-sm transition-all duration-200">
+    <div className={cn(
+      "bg-white rounded-xl p-4 border border-gray-100 hover:border-gray-200 hover:shadow-sm transition-all duration-200",
+      isUnread && "ring-1 ring-blue-200"
+    )}>
       <div className="flex items-start gap-3">
-        <div className="text-2xl flex-shrink-0">{alert.icon}</div>
+        <div className="flex-shrink-0">
+          <DollarSign className="w-5 h-5 text-green-600" />
+        </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-start justify-between gap-2 mb-1">
             <h4 className="font-semibold text-gray-900 text-sm leading-tight">
               {alert.title}
+              {isUnread && (
+                <span className="ml-2 inline-block w-1.5 h-1.5 bg-blue-600 rounded-full" />
+              )}
             </h4>
             <span
               className={cn(
-                'text-xs font-medium px-2 py-0.5 rounded-md flex-shrink-0',
-                priorityColors[alert.priority]
+                'text-xs font-medium px-2 py-0.5 rounded-md flex-shrink-0 capitalize',
+                priorityColors[alert.severity]
               )}
             >
-              {alert.priority}
+              {alert.severity}
             </span>
           </div>
           <p className="text-sm text-gray-600 line-clamp-2 mb-2">
             {alert.description}
           </p>
-          <div className="text-sm font-semibold text-green-600">
-            Est. Value: ${alert.estimatedValue.toLocaleString()}
-          </div>
+          {alert.estimated_value && (
+            <div className="text-sm font-semibold text-green-600">
+              Est. Value: ${alert.estimated_value.toLocaleString()}/year
+            </div>
+          )}
         </div>
       </div>
     </div>
@@ -108,7 +122,7 @@ function QuickActions({ actions }: QuickActionsProps) {
 }
 
 interface RightPanelProps {
-  alerts: Alert[];
+  alerts: AlertWithState[];
   propertyDistribution: PropertyDistribution[];
 }
 

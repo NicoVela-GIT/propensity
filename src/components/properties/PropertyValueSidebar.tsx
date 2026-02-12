@@ -8,12 +8,16 @@ interface PropertyValueSidebarProps {
   property: Property;
   onEditValue?: () => void;
   onEditMortgage?: () => void;
+  onZillowClick?: () => void;
+  onRedfinClick?: () => void;
 }
 
 export default function PropertyValueSidebar({
   property,
   onEditValue,
   onEditMortgage,
+  onZillowClick,
+  onRedfinClick,
 }: PropertyValueSidebarProps) {
   const appreciationPercent = property.purchasePrice > 0
     ? ((property.currentValue - property.purchasePrice) / property.purchasePrice) * 100
@@ -62,24 +66,20 @@ export default function PropertyValueSidebar({
         {/* External Links */}
         <div className="space-y-2 mb-6">
           <p className="text-sm text-gray-500">Check Current Market Value:</p>
-          <a
-            href={zillowUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center gap-2 p-3 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors"
+          <button
+            onClick={onZillowClick || (() => window.open(zillowUrl, '_blank'))}
+            className="w-full flex items-center gap-2 p-3 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors"
           >
             <ExternalLink className="w-4 h-4 text-gray-400" />
             <span className="text-sm font-medium text-gray-700">View on Zillow</span>
-          </a>
-          <a
-            href={redfinUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center gap-2 p-3 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors"
+          </button>
+          <button
+            onClick={onRedfinClick || (() => window.open(redfinUrl, '_blank'))}
+            className="w-full flex items-center gap-2 p-3 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors"
           >
             <ExternalLink className="w-4 h-4 text-gray-400" />
             <span className="text-sm font-medium text-gray-700">View on Redfin</span>
-          </a>
+          </button>
           <p className="text-xs text-gray-400 mt-2">
             Check these sites for updated estimates, then use the edit button above to update your property value.
           </p>

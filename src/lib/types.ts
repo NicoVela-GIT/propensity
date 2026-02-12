@@ -27,6 +27,7 @@ export interface Property {
   mortgagePayment?: number;
   mortgageBalance?: number;
   downPayment?: number;
+  interestRate?: number;
   appreciation: number;
   roi: number;
   propertyType: 'single-family' | 'multi-family' | 'commercial' | 'condo' | 'townhouse';

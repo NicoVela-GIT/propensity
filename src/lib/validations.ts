@@ -46,6 +46,7 @@ export const addPropertySchema = z.object({
   currentEstimatedValue: z.coerce.number().min(0).optional(),
   currentMortgageBalance: z.coerce.number().min(0).optional(),
   monthlyMortgagePayment: z.coerce.number().min(0).optional(),
+  interestRate: z.coerce.number().min(0).max(100).optional(),
 
   // Rental Information
   monthlyRent: z.coerce.number().min(0).optional(),
@@ -74,6 +75,7 @@ export const addPropertyDefaultValues: Partial<AddPropertyFormData> = {
   currentEstimatedValue: undefined,
   currentMortgageBalance: undefined,
   monthlyMortgagePayment: undefined,
+  interestRate: undefined,
   monthlyRent: undefined,
   monthlyExpenses: undefined,
   bedrooms: undefined,

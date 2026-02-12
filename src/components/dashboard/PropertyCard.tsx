@@ -3,6 +3,12 @@
 import { MapPin } from 'lucide-react';
 import { Property } from '@/lib/types';
 import { cn } from '@/lib/utils';
+import {
+  convertOldPropertyToNew,
+  calculateEquity,
+  calculateEquityPercentage,
+  calculateAppreciation,
+} from '@/lib/domain';
 
 interface PropertyCardProps {
   property: Property;
@@ -10,6 +16,24 @@ interface PropertyCardProps {
 }
 
 export default function PropertyCard({ property, className }: PropertyCardProps) {
+  // Convert to domain model and calculate metrics
+  const { property: domainProperty, valuation, loanBalance } = convertOldPropertyToNew(property);
+  
+  const computedEquity = calculateEquity(
+    valuation.estimatedValue,
+    loanBalance ? [loanBalance.principalBalance] : []
+  );
+  
+  const computedEquityPercent = calculateEquityPercentage(
+    valuation.estimatedValue,
+    loanBalance ? [loanBalance.principalBalance] : []
+  );
+  
+  const computedAppreciation = calculateAppreciation(
+    valuation.estimatedValue,
+    domainProperty.purchasePrice
+  );
+  
   const getRoiColor = (roi: number) => {
     if (roi >= 100) return 'bg-green-100 text-green-700 border-green-200';
     if (roi >= 20) return 'bg-green-50 text-green-600 border-green-100';
@@ -53,21 +77,24 @@ export default function PropertyCard({ property, className }: PropertyCardProps)
       
       <div className="grid grid-cols-3 gap-4">
         <div>
-          <p className="text-sm text-gray-500 mb-1">Current Value</p>
+          <p className="text-sm text-gray-500 mb-1">Equity</p>
           <p className="text-base sm:text-lg xl:text-xl font-bold text-gray-900">
-            ${property.currentValue.toLocaleString()}
+            ${computedEquity.toLocaleString('en-US')}
+          </p>
+          <p className="text-xs text-gray-500 mt-0.5">
+            {computedEquityPercent.toFixed(1)}%
           </p>
         </div>
         <div>
           <p className="text-sm text-gray-500 mb-1">Monthly Income</p>
           <p className="text-base sm:text-lg xl:text-xl font-bold text-green-600">
-            +${property.monthlyIncome.toLocaleString()}
+            +${property.monthlyIncome.toLocaleString('en-US')}
           </p>
         </div>
         <div>
           <p className="text-sm text-gray-500 mb-1">Appreciation</p>
           <p className="text-base sm:text-lg xl:text-xl font-bold text-green-600">
-            +{property.appreciation}%
+            +{computedAppreciation.toFixed(1)}%
           </p>
         </div>
       </div>

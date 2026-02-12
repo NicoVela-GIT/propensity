@@ -1,18 +1,38 @@
 'use client';
 
 import { useParams, useRouter } from 'next/navigation';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
 import { AddPropertyForm } from '@/components/forms';
-import { getPropertyById } from '@/lib/data';
+import { getPropertyById as getPropertyByIdService, updateProperty as updatePropertyService } from '@/lib/supabase/services/property.service';
 import { AddPropertyFormData } from '@/lib/validations';
+import type { Property } from '@/lib/types';
 
 export default function EditPropertyPage() {
   const params = useParams();
   const router = useRouter();
   const propertyId = params.id as string;
 
-  const property = getPropertyById(propertyId);
+  const [property, setProperty] = useState<Property | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    getPropertyByIdService(propertyId).then(data => {
+      setProperty(data);
+      setLoading(false);
+    });
+  }, [propertyId]);
+
+  if (loading) {
+    return (
+      <div className="p-8">
+        <div className="text-center py-16">
+          <p className="text-gray-600">Loading property...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (!property) {
     return (
@@ -44,6 +64,7 @@ export default function EditPropertyPage() {
     currentEstimatedValue: property.currentValue,
     currentMortgageBalance: property.mortgageBalance,
     monthlyMortgagePayment: property.mortgagePayment,
+    interestRate: property.interestRate,
     monthlyRent: property.monthlyIncome,
     monthlyExpenses: property.monthlyExpenses,
     bedrooms: property.bedrooms,
@@ -53,13 +74,45 @@ export default function EditPropertyPage() {
     notes: property.notes || '',
   };
 
-  const handleSubmit = (data: AddPropertyFormData) => {
-    // TODO: Update property in database/API
-    console.log('Updated property data:', { id: propertyId, ...data });
+  const handleSubmit = async (data: AddPropertyFormData) => {
+    try {
+      // Update the property using the service layer
+      // This will use Supabase if enabled, otherwise mock data
+      await updatePropertyService(propertyId, {
+        address: data.address,
+        city: data.city,
+        state: data.state,
+        zipCode: data.zipCode,
+        propertyType: data.propertyType,
+        purchasePrice: data.purchasePrice,
+        purchaseDate: data.purchaseDate,
+        downPayment: data.downPayment,
+        currentValue: data.currentEstimatedValue || property?.currentValue || 0,
+        mortgageBalance: data.currentMortgageBalance,
+        mortgagePayment: data.monthlyMortgagePayment,
+        interestRate: data.interestRate,
+        monthlyIncome: data.monthlyRent || 0,
+        monthlyExpenses: data.monthlyExpenses,
+        bedrooms: data.bedrooms,
+        bathrooms: data.bathrooms,
+        squareFeet: data.squareFeet,
+        yearBuilt: data.yearBuilt,
+        notes: data.notes,
+      });
 
-    // For now, just show success and redirect
-    alert('Property updated successfully!');
-    router.push(`/properties/${propertyId}`);
+      const isSupabase = process.env.NEXT_PUBLIC_USE_SUPABASE === 'true';
+      
+      if (isSupabase) {
+        alert('✅ Property updated successfully!\n\nChanges have been saved to the database.');
+      } else {
+        alert('✅ Property updated successfully!\n\n⚠️ Note: Changes are stored in memory only and will reset on page refresh.\n\nTo enable permanent storage, set NEXT_PUBLIC_USE_SUPABASE=true in .env.local');
+      }
+
+      router.push(`/properties/${propertyId}`);
+    } catch (error) {
+      console.error('Error updating property:', error);
+      alert('❌ Error: Failed to update property. Please try again.');
+    }
   };
 
   const handleCancel = () => {

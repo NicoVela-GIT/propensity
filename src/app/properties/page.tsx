@@ -1,12 +1,13 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import Link from 'next/link';
 import { Search, PlusCircle, Building2 } from 'lucide-react';
 import { PropertyGridCard } from '@/components/properties';
-import { properties } from '@/lib/data';
+import { getAllProperties } from '@/lib/supabase/services/property.service';
 import { cn } from '@/lib/utils';
 import { Input } from '@/components/ui/input';
+import type { Property } from '@/lib/types';
 
 const propertyTypeFilters = [
   { value: 'all', label: 'All' },
@@ -18,6 +19,16 @@ const propertyTypeFilters = [
 export default function PropertiesPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedType, setSelectedType] = useState('all');
+  const [properties, setProperties] = useState<Property[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  // Fetch properties on mount
+  useEffect(() => {
+    getAllProperties().then(data => {
+      setProperties(data);
+      setLoading(false);
+    });
+  }, []);
 
   // Filter properties based on search and type
   const filteredProperties = useMemo(() => {
@@ -30,7 +41,7 @@ export default function PropertiesPage() {
 
       return matchesSearch && matchesType;
     });
-  }, [searchQuery, selectedType]);
+  }, [searchQuery, selectedType, properties]);
 
   const handleEdit = (id: string) => {
     // TODO: Implement edit functionality
@@ -41,6 +52,16 @@ export default function PropertiesPage() {
     // TODO: Implement delete functionality
     console.log('Delete property:', id);
   };
+
+  if (loading) {
+    return (
+      <div className="p-4 sm:p-6 lg:p-8">
+        <div className="text-center py-16">
+          <p className="text-gray-600">Loading properties...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="p-4 sm:p-6 lg:p-8">

@@ -319,6 +319,35 @@ export default function AddPropertyForm({
               </div>
             </div>
           </div>
+
+          {/* Interest Rate */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="interestRate" className="text-sm font-medium text-gray-700">
+                Interest Rate (APR)
+              </Label>
+              <div className="relative mt-1.5">
+                <Input
+                  id="interestRate"
+                  type="number"
+                  step="0.001"
+                  {...register('interestRate')}
+                  placeholder="e.g. 4.5"
+                  className={cn(
+                    'pr-8',
+                    errors.interestRate && 'border-red-500 focus-visible:ring-red-500'
+                  )}
+                />
+                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500">%</span>
+              </div>
+              {errors.interestRate && (
+                <p className="mt-1 text-sm text-red-500">{errors.interestRate.message}</p>
+              )}
+              <p className="mt-1 text-xs text-gray-500">
+                Used for refinance opportunity alerts
+              </p>
+            </div>
+          </div>
         </div>
       </FormSection>
 
