@@ -5,7 +5,7 @@
  */
 
 import { supabase } from '../client';
-import type { Database } from './database.types';
+import type { Database } from '../database.types';
 
 // ============================================
 // Types
