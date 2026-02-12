@@ -20,9 +20,9 @@ export interface AlertRuleInsert {
 
 export interface AlertRule extends AlertRuleInsert {
   id: string;
-  enabled: boolean;
-  created_at: string;
-  updated_at: string;
+  enabled: boolean | null;
+  created_at: string | null;
+  updated_at: string | null;
 }
 
 export interface GeneratedAlertInsert {
@@ -39,16 +39,16 @@ export interface GeneratedAlertInsert {
 }
 
 export interface GeneratedAlert extends GeneratedAlertInsert {
-  created_at: string;
+  created_at: string | null;
 }
 
 export interface UserAlertState {
   alert_id: string;
-  is_read: boolean;
-  is_dismissed: boolean;
-  dismissed_at?: string;
-  created_at: string;
-  updated_at: string;
+  is_read: boolean | null;
+  is_dismissed: boolean | null;
+  dismissed_at: string | null;
+  created_at: string | null;
+  updated_at: string | null;
 }
 
 export interface AlertWithState extends GeneratedAlert {
