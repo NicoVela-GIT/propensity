@@ -31,7 +31,7 @@ export async function migrateMockData() {
 
       // Calculate loan amount from down payment
       const loanAmount = mockProperty.mortgageBalance || 0;
-      const cashInvested = mockProperty.downPayment + closingCosts;
+      const cashInvested = (mockProperty.downPayment || 0) + closingCosts;
 
       // Prepare property data
       const propertyData = {
