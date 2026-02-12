@@ -29,15 +29,15 @@ export interface AlertRule extends AlertRuleInsert {
 
 export interface GeneratedAlertInsert {
   id: string; // Hash-based ID for idempotency
-  rule_id?: string;
-  property_id?: string;
+  rule_id?: string | null;
+  property_id?: string | null;
   severity: AlertSeverity;
   title: string;
   description: string;
-  estimated_value?: number;
-  action_deadline?: string; // YYYY-MM-DD
+  estimated_value?: number | null;
+  action_deadline?: string | null; // YYYY-MM-DD
   triggered_at: string; // ISO timestamp
-  metadata?: Record<string, any>;
+  metadata?: Json;
 }
 
 export interface GeneratedAlert extends GeneratedAlertInsert {
