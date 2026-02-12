@@ -5,8 +5,8 @@ on:
     # Update mortgage rates: Every Friday at 6 PM UTC (after FRED updates)
     - cron: '0 18 * * 5'
     
-    # Generate alerts: Every day at 6 AM UTC
-    - cron: '0 6 * * *'
+    # Generate alerts: EVERY HOUR (distributed batch processing)
+    - cron: '0 * * * *'
   
   # Allow manual triggering for testing
   workflow_dispatch:
@@ -17,7 +17,8 @@ on:
         type: choice
         options:
           - update-rates
-          - generate-alerts
+          - generate-alerts-batch
+          - generate-alerts-all
           - both
 
 jobs:
@@ -33,6 +34,7 @@ jobs:
     steps:
       - name: Trigger Rate Update Job
         run: |
+          echo "🔄 Updating mortgage rates from FRED API..."
           response=$(curl -s -o /dev/null -w "%{http_code}" \
             -X GET "${{ secrets.APP_URL }}/api/jobs/update-rates")
           
@@ -43,32 +45,63 @@ jobs:
             exit 1
           fi
 
-  generate-alerts:
-    name: Generate Alerts
+  generate-alerts-hourly:
+    name: Generate Alerts (Hourly Batch)
     runs-on: ubuntu-latest
-    # Run on daily schedule or manual trigger
+    # Run on hourly schedule or manual trigger
     if: |
-      github.event.schedule == '0 6 * * *' || 
-      github.event.inputs.job_type == 'generate-alerts' ||
+      github.event.schedule == '0 * * * *' || 
+      github.event.inputs.job_type == 'generate-alerts-batch' ||
       github.event.inputs.job_type == 'both'
     
     steps:
-      - name: Trigger Alert Generation Job
+      - name: Trigger Hourly Alert Generation
         run: |
-          response=$(curl -s -o /dev/null -w "%{http_code}" \
+          echo "🔔 Generating alerts for current hour batch..."
+          response=$(curl -s -w "\n%{http_code}" \
             -X GET "${{ secrets.APP_URL }}/api/jobs/generate-alerts")
           
-          if [ $response -eq 200 ]; then
+          http_code=$(echo "$response" | tail -n1)
+          body=$(echo "$response" | sed '$d')
+          
+          if [ $http_code -eq 200 ]; then
             echo "✅ Alerts generated successfully"
+            echo "$body" | jq -r '.message' || echo "$body"
           else
-            echo "❌ Failed to generate alerts (HTTP $response)"
+            echo "❌ Failed to generate alerts (HTTP $http_code)"
+            echo "$body"
+            exit 1
+          fi
+
+  generate-alerts-all:
+    name: Generate Alerts (All Properties)
+    runs-on: ubuntu-latest
+    # Only run on manual trigger for full processing
+    if: github.event.inputs.job_type == 'generate-alerts-all'
+    
+    steps:
+      - name: Trigger Full Alert Generation
+        run: |
+          echo "🔔 Generating alerts for ALL properties (legacy mode)..."
+          response=$(curl -s -w "\n%{http_code}" \
+            -X GET "${{ secrets.APP_URL }}/api/jobs/generate-alerts?all=true")
+          
+          http_code=$(echo "$response" | tail -n1)
+          body=$(echo "$response" | sed '$d')
+          
+          if [ $http_code -eq 200 ]; then
+            echo "✅ Alerts generated successfully"
+            echo "$body" | jq -r '.message' || echo "$body"
+          else
+            echo "❌ Failed to generate alerts (HTTP $http_code)"
+            echo "$body"
             exit 1
           fi
 
   notify-on-failure:
     name: Notify on Failure
     runs-on: ubuntu-latest
-    needs: [update-mortgage-rates, generate-alerts]
+    needs: [update-mortgage-rates, generate-alerts-hourly]
     if: failure()
     
     steps:

@@ -373,3 +373,60 @@ export async function addExpense(
 
   return expense;
 }
+
+/**
+ * Get properties for a specific alert batch slot
+ * Used for hourly distributed alert generation
+ * 
+ * @param batchSlot - Hour of day (0-23) to fetch properties for
+ * @returns Array of properties assigned to this batch slot
+ */
+export async function getPropertiesByBatchSlot(batchSlot: number): Promise<PropertyWithRelations[]> {
+  const { data: properties, error: propertiesError } = await supabase
+    .from('properties')
+    .select('*')
+    .eq('alert_batch_slot', batchSlot)
+    .order('created_at', { ascending: false });
+
+  if (propertiesError) {
+    console.error('Error fetching properties:', propertiesError);
+    throw new Error('Failed to fetch properties');
+  }
+
+  if (!properties || properties.length === 0) {
+    return [];
+  }
+
+  // Fetch all related data in parallel
+  const propertyIds = properties.map(p => p.id);
+
+  const [
+    { data: capitalStructures },
+    { data: loans },
+    { data: valuations },
+    { data: loanBalances },
+    { data: leases },
+    { data: expenses },
+  ] = await Promise.all([
+    supabase.from('capital_structures').select('*').in('property_id', propertyIds),
+    supabase.from('loans').select('*').in('property_id', propertyIds),
+    supabase.from('valuation_snapshots').select('*').in('property_id', propertyIds).order('effective_date', { ascending: false }),
+    supabase.from('loan_balance_snapshots').select('*'),
+    supabase.from('leases').select('*').in('property_id', propertyIds).order('start_date', { ascending: false }),
+    supabase.from('expenses').select('*').in('property_id', propertyIds).order('effective_date', { ascending: false }),
+  ]);
+
+  // Group related data by property
+  return properties.map(property => ({
+    property,
+    capitalStructure: capitalStructures?.find(cs => cs.property_id === property.id) || null,
+    loans: loans?.filter(l => l.property_id === property.id) || [],
+    valuations: valuations?.filter(v => v.property_id === property.id) || [],
+    loanBalances: loanBalances?.filter(lb => {
+      const loanIds = loans?.filter(l => l.property_id === property.id).map(l => l.id) || [];
+      return lb.loan_id && loanIds.includes(lb.loan_id);
+    }) || [],
+    leases: leases?.filter(l => l.property_id === property.id) || [],
+    expenses: expenses?.filter(e => e.property_id === property.id) || [],
+  }));
+}

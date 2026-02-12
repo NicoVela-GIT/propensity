@@ -1,12 +1,13 @@
 /**
- * Daily Alert Generation Job
+ * Alert Generation Job
  * 
- * Runs all alert generators and stores results in the database.
- * Should be run daily (e.g., at 6 AM).
+ * Runs alert generators for properties in batches.
+ * Can run hourly (batched) or daily (all properties).
  */
 
 import { generateRefinanceAlertsForPortfolio } from '../alerts/generators/refinance-alert.generator';
 import { upsertGeneratedAlerts } from '../supabase/repositories/alerts.repository';
+import { getPropertiesByBatchSlot } from '../supabase/repositories/properties.repository';
 
 // ============================================
 // Job Implementation
@@ -18,6 +19,8 @@ export interface AlertGenerationResult {
   totalAlerts: number;
   error?: string;
   timestamp: string;
+  batchSlot?: number;
+  propertiesProcessed?: number;
   details?: {
     refinanceAlertsGenerated: number;
     refinanceAlertsStored: number;
@@ -25,7 +28,117 @@ export interface AlertGenerationResult {
 }
 
 /**
- * Generate all alerts for the portfolio
+ * Generate alerts for properties in a specific batch slot (hourly processing)
+ * 
+ * This function processes only properties assigned to a specific hour of the day.
+ * Designed to be run every hour to distribute load across 24 hours.
+ * 
+ * @param batchSlot - Hour of day (0-23) to process. If not provided, uses current UTC hour.
+ * @returns Result object with success status and alert counts
+ * 
+ * @example
+ * ```typescript
+ * // Process properties for current hour
+ * const result = await generateAlertsForBatch();
+ * 
+ * // Process properties for specific hour
+ * const result = await generateAlertsForBatch(14); // 2 PM UTC
+ * ```
+ */
+export async function generateAlertsForBatch(batchSlot?: number): Promise<AlertGenerationResult> {
+  const timestamp = new Date().toISOString();
+  const currentHour = batchSlot ?? new Date().getUTCHours();
+  
+  console.log('[Job] Starting hourly alert generation...');
+  console.log(`[Job] Batch slot: ${currentHour} (UTC hour)`);
+  console.log(`[Job] Timestamp: ${timestamp}`);
+
+  try {
+    // ============================================
+    // 1. Get Properties for This Batch Slot
+    // ============================================
+    const properties = await getPropertiesByBatchSlot(currentHour);
+    
+    console.log(`[Job] Found ${properties.length} properties in batch slot ${currentHour}`);
+
+    if (properties.length === 0) {
+      console.log('[Job] No properties to process in this batch');
+      return {
+        success: true,
+        refinanceAlerts: 0,
+        totalAlerts: 0,
+        timestamp,
+        batchSlot: currentHour,
+        propertiesProcessed: 0,
+      };
+    }
+
+    // ============================================
+    // 2. Generate Refinance Alerts for Batch
+    // ============================================
+    console.log('[Job] Generating refinance opportunity alerts...');
+    
+    // Import the generator function
+    const { generateRefinanceAlert } = await import('../alerts/generators/refinance-alert.generator');
+    
+    const refinanceAlerts = [];
+    
+    for (const property of properties) {
+      const alert = await generateRefinanceAlert(property);
+      if (alert) {
+        refinanceAlerts.push(alert);
+      }
+    }
+    
+    console.log(`[Job] Generated ${refinanceAlerts.length} refinance alerts`);
+
+    // Store refinance alerts in database
+    if (refinanceAlerts.length > 0) {
+      const stored = await upsertGeneratedAlerts(refinanceAlerts);
+      console.log(`[Job] Stored ${stored.length} refinance alerts in database`);
+    }
+
+    // ============================================
+    // 3. Return Results
+    // ============================================
+    const totalAlerts = refinanceAlerts.length;
+
+    console.log('[Job] Batch alert generation completed successfully');
+    console.log(`[Job] Batch slot: ${currentHour}, Properties: ${properties.length}, Alerts: ${totalAlerts}`);
+
+    return {
+      success: true,
+      refinanceAlerts: refinanceAlerts.length,
+      totalAlerts,
+      timestamp,
+      batchSlot: currentHour,
+      propertiesProcessed: properties.length,
+      details: {
+        refinanceAlertsGenerated: refinanceAlerts.length,
+        refinanceAlertsStored: refinanceAlerts.length,
+      },
+    };
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    console.error('[Job] Failed to generate alerts for batch:', errorMessage);
+    console.error('[Job] Error details:', error);
+    
+    return {
+      success: false,
+      refinanceAlerts: 0,
+      totalAlerts: 0,
+      error: errorMessage,
+      timestamp,
+      batchSlot: currentHour,
+      propertiesProcessed: 0,
+    };
+  }
+}
+
+/**
+ * Generate all alerts for the portfolio (legacy - processes all properties at once)
+ * 
+ * @deprecated Use generateAlertsForBatch() for better scalability
  * 
  * Runs all enabled alert generators and stores the results in the database.
  * Currently supports:

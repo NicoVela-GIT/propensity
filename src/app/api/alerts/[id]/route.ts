@@ -17,10 +17,11 @@ import {
 
 export async function GET(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const alert = await getAlertById(params.id);
+    const { id } = await params;
+    const alert = await getAlertById(id);
     
     if (!alert) {
       return NextResponse.json({
@@ -46,9 +47,10 @@ export async function GET(
 
 export async function PATCH(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const body = await request.json();
     const { action } = body;
 
@@ -56,13 +58,13 @@ export async function PATCH(
 
     switch (action) {
       case 'mark_read':
-        result = await markAlertAsRead(params.id);
+        result = await markAlertAsRead(id);
         break;
       case 'dismiss':
-        result = await dismissAlert(params.id);
+        result = await dismissAlert(id);
         break;
       case 'undismiss':
-        result = await undismissAlert(params.id);
+        result = await undismissAlert(id);
         break;
       default:
         return NextResponse.json({
