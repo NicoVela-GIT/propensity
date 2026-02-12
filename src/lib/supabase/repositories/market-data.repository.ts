@@ -6,24 +6,27 @@
  */
 
 import { supabase } from '../client';
+import type { Database } from '../database.types';
 
 // ============================================
 // Types
 // ============================================
 
+export type Json = Database['public']['Tables']['market_data']['Row']['metadata'];
+
 export interface MarketDataInsert {
-  data_type: 'mortgage_rate' | 'hpi';
-  region_type: 'national' | 'state' | 'metro' | 'zip3';
+  data_type: string; // 'mortgage_rate' | 'hpi' stored as string in DB
+  region_type: string; // 'national' | 'state' | 'metro' | 'zip3' stored as string in DB
   region_code: string;
   effective_date: string; // YYYY-MM-DD
   value: number;
-  metadata?: Record<string, any>;
+  metadata?: Json;
 }
 
 export interface MarketData extends MarketDataInsert {
   id: string;
-  created_at: string;
-  updated_at: string;
+  created_at: string | null;
+  updated_at: string | null;
 }
 
 // ============================================
