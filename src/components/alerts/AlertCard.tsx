@@ -43,7 +43,7 @@ const severityConfig = {
 };
 
 export default function AlertCard({ alert, onDismiss, onClick }: AlertCardProps) {
-  const config = severityConfig[alert.severity];
+  const config = severityConfig[alert.severity as keyof typeof severityConfig] || severityConfig.medium;
   const Icon = config.icon;
   const isUnread = !alert.user_state?.is_read;
 
