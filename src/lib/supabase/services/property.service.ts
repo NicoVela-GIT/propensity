@@ -105,7 +105,7 @@ function convertSupabaseToOldProperty(data: PropertyWithRelations): OldProperty 
     interestRate,
     appreciation: appreciationPercent,
     roi,
-    propertyType: property.property_type,
+    propertyType: property.property_type as 'single-family' | 'multi-family' | 'commercial' | 'condo' | 'townhouse',
     bedrooms: property.bedrooms || undefined,
     bathrooms: property.bathrooms || undefined,
     squareFeet: property.square_feet || undefined,
